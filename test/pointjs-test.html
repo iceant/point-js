@@ -205,6 +205,24 @@
 
             fn1.setNextSuccessor(fn2).setNextSuccessor(fn3);
             fn1.passRequest();
+        },
+        'Array.prototype.indexOf':function(){
+            console.log([1,2,3,4].indexOf(2));
+            console.log([1,2,3,4].indexOf(0));
+        },
+        '$pointjs.uniqueId':function(){
+            var cache = [];
+            var conflictCount =0;
+            for(var i=0; i<100000; i++){
+                var id = $pointjs.uniqueId();
+                if(cache.indexOf(id)!=-1){
+                    console.log('conflict:'+id);
+                    conflictCount+=1;
+                }else{
+                    cache.push($pointjs.uniqueId());
+                }
+            }
+            console.log("conflict count:"+conflictCount+", valid:"+cache.length);
         }
     };
 

@@ -138,5 +138,6 @@
     })();
 
     window.$pointjs.Event = Event;
+    window.Event = window.Event||Event;
 
 }(window, document));

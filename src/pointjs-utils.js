@@ -9,6 +9,12 @@
         }(type));
     }
 
+    $pointjs.fn.uniqueId = function(){
+        // return Math.random().toString(16).slice(2)+(new Date()).getTime()+Math.random().toString(16).slice(2);
+        return Date.now().toString(36) + Math.random().toString(36).substr(2);
+    };
+
+
     $pointjs.fn.single = function (fn) {
         var ret;
         return function () {
@@ -51,7 +57,10 @@
         };
     };
 
-    $pointjs.fn.timeChunk = function (ary, fn/*fn(item in ary)*/, count/*call how many times every cycle*/, interval) {
+    $pointjs.fn.timeChunk = function (ary,
+                                      fn/*fn(item in ary)*/,
+                                      count/*call how many times every cycle*/,
+                                      interval) {
         var obj,
             t;
 
@@ -209,7 +218,7 @@
     var Chain = function(fn){
         this.fn = fn;
         this.successor = null;
-    }
+    };
     Chain.prototype.passRequest = function(){
         var ret = this.fn.apply(this, arguments);
         if(ret!==false){
@@ -218,7 +227,7 @@
     };
     Chain.prototype.setNextSuccessor = function(successor){
         return this.successor = successor;
-    }
+    };
     Chain.prototype.next = function(){
         return this.successor && this.successor.passRequest.apply(this.successor, arguments);
     };

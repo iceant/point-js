@@ -3,7 +3,6 @@
     Object.create = Object.create || function( obj ){
         var F = function(){};
         F.prototype = obj;
-
         return new F();
     };
 
@@ -16,7 +15,7 @@
         };
     };
 
-    Function.prototype.before = function(beforeFn){
+    Function.prototype.before = Function.prototype.before||function(beforeFn){
         var _self = this;
         return function(){
             var ret = beforeFn.apply(this, arguments);
@@ -26,7 +25,7 @@
         };
     };
 
-    Function.prototype.after = function(afterFn){
+    Function.prototype.after = Function.prototype.after||function(afterFn){
         var _self = this;
         return function () {
             var ret = _self.apply(this, arguments);
@@ -56,4 +55,21 @@
         };
     };
 
+    Array.prototype.indexOf = Array.prototype.indexOf||function(val, cmp){
+        cmp = cmp||function(a, b){
+            return a===b;
+        };
+
+        for(var i=0; i<this.length; i++){
+            if(cmp(this[i], val)) return i;
+        }
+        return -1;
+    };
+
+    Array.prototype.remove = function(val, cmp) {
+        var index = this.indexOf(val, cmp);
+        if (index > -1) {
+            this.splice(index, 1);
+        }
+    };
 }(window, document));
