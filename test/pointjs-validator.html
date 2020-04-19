@@ -1,0 +1,59 @@
+<html>
+<head></head>
+<body>
+
+<form action="#" id="registerForm" method="post">
+    请输入用户名：<input type="text" name="userName">
+    请输入密码：<input type="text" name="password">
+    请输入手机号码：<input type="text" name="phoneNumber">
+    <button>提交</button>
+</form>
+
+<script src="../src/pointjs-base.js"></script>
+<script src="../src/pointjs-utils.js"></script>
+<script src="pointjs-validator.js"></script>
+<script>
+    var registerForm = document.getElementById( 'registerForm' );
+
+    var validataFunc = function(){
+        var validator = new Validator({
+            'isMobileNumber':function(val, errorMsg){
+                if (!/(^1[358][0-9]{9}$)/.test(val)) {
+                    return errorMsg;
+                }
+            }
+        });
+        validator.add( registerForm.userName, [{
+            strategy: 'isNonEmpty',
+            errorMsg: '用户名不能为空'
+        }, {
+            strategy: 'minLength:6',
+            errorMsg: '用户名长度不能小于10位'
+        }]);
+
+        validator.add( registerForm.password, [{
+            strategy: 'minLength:6',
+            errorMsg: '密码长度不能小于6位'
+        }]);
+
+        validator.add( registerForm.phoneNumber, [{
+            strategy: 'isMobileNumber',
+            errorMsg: '手机号码格式不正确'
+        }]);
+
+        var errorMsg = validator.start();
+        return errorMsg;
+    }
+
+    registerForm.onsubmit = function(){
+        var errorMsg = validataFunc();
+        console.log(errorMsg);
+
+        if ( errorMsg ){
+            alert ( errorMsg );
+            return false;
+        }
+    };
+</script>
+</body>
+</html>

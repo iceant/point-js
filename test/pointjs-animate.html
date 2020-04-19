@@ -1,0 +1,19 @@
+<html>
+<head></head>
+<body>
+<div style="position:absolute;background:blue" id="div">我是div</div>
+
+<script src="../src/pointjs-polyfill.js"></script>
+<script src="../src/pointjs-base.js"></script>
+<script src="../src/pointjs-utils.js"></script>
+<script src="pointjs-animate.js"></script>
+<script>
+var div = document.getElementById('div');
+var animate = new Animate(div);
+animate.start('left', 500, 1000, 'strongEaseOut');
+$pointjs.sleep(500).then(function(){
+    animate.start('left', 0, 1000, 'strongEaseIn');
+});
+</script>
+</body>
+</html>

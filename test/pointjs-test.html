@@ -1,0 +1,221 @@
+<html>
+<head>
+</head>
+<body>
+<script src="../src/pointjs-base.js"></script>
+<script src="../src/pointjs-polyfill.js"></script>
+<script src="../src/pointjs-utils.js"></script>
+<script src="../src/pointjs-event.js"></script>
+<script src="test.js"></script>
+<script>
+    var testCases = {
+        'Type':function(){
+            assert($pointjs.Type.isString('123'), 'Type.isString error!');
+            assert($pointjs.Type.isFunction(function(){}), 'Type.isFunction error!');
+            assert($pointjs.Type.isBoolean(true), 'Type.isBoolean error!');
+            assert($pointjs.Type.isNumber(1), 'Type.isNumber error!');
+            assert($pointjs.Type.isObject({}), 'Type.isObject error!');
+            assert($pointjs.Type.isArray([]), 'Type.isArray error!');
+        },
+        'Function.prototype.bind':function(){
+            var obj = {
+                name:'Chen Peng'
+            };
+
+            var fn = function(a, b, c, d){
+                assert(this.name===obj.name, 'this.name!==obj.name');
+                console.log([a, b, c, d]);
+                assert((a===1 && b===2 && c===3 && d===4), '[a, b, c, d]!==[1,2,3,4]');
+            }.bind(obj, 1, 2);
+
+            fn(3, 4);
+        },
+        '$pointjs.single':function(){
+            var getScript = $pointjs.single(function(){
+                return document.createElement("script");
+            });
+            var script1 = getScript();
+            var script2 = getScript();
+            assert(script1===script2, "script1!=script2");
+        },
+        'Function.prototype.before & after':function(){
+            var fn = function(){
+                console.log(2);
+            };
+
+            fn = fn.before(function(){
+                console.log(1);
+            }).after(function(){
+                console.log(3);
+            });
+
+            fn();
+        },
+        'Function.prototype.currying':function () {
+            var cost = function(){
+              var money = 0;
+              return function(){
+                  for(var i=0, l = arguments.length; i<l; i++){
+                      money += arguments[i];
+                  }
+                  return money;
+              };
+            }();
+
+            cost = cost.currying(cost);
+            cost(100);
+            cost(200);
+            cost(300);
+
+            assert(cost()===600);
+        },
+        '$pointjs.fn.timeChunk':function(){
+            var ary = [];
+            for(var i=0; i<10; i++){
+                ary.push(i);
+            }
+            var renderFriendList = $pointjs.timeChunk( ary, function( n ){
+                var div = document.createElement( 'div' );
+                div.innerHTML = n;
+                document.body.appendChild( div );
+            }, 8 );
+
+            renderFriendList();
+        },
+        '$pointjs.fn.makeTimerProxy':function(){
+            var synchronizeFile = function(params){
+                var requestParam = [];
+                for(var i=0; i<params.length; i++){
+                    requestParam.push(params[i][0]);
+                }
+                var json = JSON.stringify(requestParam);
+                console.log('send batch request to server:'+json);
+            }
+
+            var proxy = $pointjs.makeTimerProxy(synchronizeFile);
+            for(var i=0; i<10; i++){
+                proxy(i);
+            }
+        },
+        '$pointjs.fn.each':function(){
+            $pointjs.each([1, 2, 3, 4, 5], function(i, val){
+                console.log(arguments);
+            });
+        },
+        '$pointjs.fn.reverseEach':function(){
+            $pointjs.reverseEach([0, 1, 2, 3, 4, 5, 6], function(i, v){
+                if(v<3) return false;
+                console.log(v);
+            });
+        },
+        '$pointjs.Event':function(){
+            var Event = $pointjs.Event;
+
+            /************** 先发布后订阅 ********************/
+
+            Event.trigger( 'click', 1 );
+
+            Event.listen( 'click', function( a ){
+                console.log( 'event.click='+a );       // 输出：1
+            });
+
+            /************** 使用命名空间 ********************/
+
+            Event.create( 'namespace1' ).listen( 'click', function( a ){
+                console.log('namespace1.click '+ a );    // 输出：1
+            });
+
+            Event.create( 'namespace1' ).trigger( 'click', 1 );
+
+
+            Event.create( 'namespace2' ).listen( 'click', function( a ){
+                console.log('namespace2.click '+ a );    // 输出：1
+            });
+
+            Event.create( 'namespace2' ).trigger( 'click', 2 );
+        },
+        '$pointjs.fn.makeMacroCommand':function(){
+            var openDoorCmd = function(){
+                console.log('open door');
+                console.log(this);
+                console.log(arguments);
+            };
+
+            var closeDoorCmd = function(){
+            }
+
+            closeDoorCmd.prototype.execute=function(){
+                console.log("close door");
+                console.log(this);
+                console.log(arguments);
+            };
+
+            var openQQCmd= {
+                execute:function(){
+                    console.log('open qq');
+                    console.log(this);
+                    console.log(arguments);
+                }
+            }
+
+            var macroCmd = $pointjs.makeMacroCommand();
+            macroCmd.add(openDoorCmd);
+            macroCmd.add(openQQCmd);
+            macroCmd.add(closeDoorCmd)
+            macroCmd.execute("cmd param");
+        },
+        '$pointjs.fn.makeObjectPoolFactory':function(){
+            var iframeFactory = $pointjs.makeObjectPoolFactory(function(){
+                var iframe = document.createElement('iframe');
+                document.body.appendChild(iframe);
+                iframe.onload = function(){
+                    iframe.onload = null;
+                    iframeFactory.recover(iframe);
+                };
+                return iframe;
+            });
+
+            var iframe1 = iframeFactory.create();
+            iframe1.src = 'http://baidu.com';
+
+            var iframe2 = iframeFactory.create();
+            iframe2.src = 'http://QQ.com';
+
+            setTimeout(function(){
+                var iframe3 = iframeFactory.create();
+                iframe3.src = 'http://163.com';
+            }, 3000 );
+        },
+        '$pointjs.fn.makeChain':function(){
+            var fn1 = $pointjs.makeChain(function(){
+                console.log(1);
+            });
+
+            var fn2 = $pointjs.makeChain(function(){
+                console.log(2);
+                var self = this;
+                setTimeout(function(){
+                    self.next();
+                }, 1000);
+            });
+
+            var fn3 = $pointjs.makeChain(function(){
+                console.log(3);
+            });
+
+            fn1.setNextSuccessor(fn2).setNextSuccessor(fn3);
+            fn1.passRequest();
+        }
+    };
+
+
+    ;(function run(){
+        for(cases in testCases){
+            console.log('Test Cases:'+cases);
+            testCases[cases]();
+        }
+
+    }());
+</script>
+</body>
+</html>
