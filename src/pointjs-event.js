@@ -137,6 +137,6 @@
         return Event;
     })();
 
-    window.$pointjs.Event = Event;
+    window.$pointjs.fn.Event = Event;
 
 }(window, document));

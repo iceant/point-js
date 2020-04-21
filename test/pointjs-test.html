@@ -2,10 +2,17 @@
 <head>
 </head>
 <body>
+
+<figure>
+    <img src="adamcatlace.jpg">
+    <figcaption>Sir Adam Catlace</figcaption>
+</figure>
+
 <script src="../src/pointjs-base.js"></script>
 <script src="../src/pointjs-polyfill.js"></script>
 <script src="../src/pointjs-utils.js"></script>
 <script src="../src/pointjs-event.js"></script>
+<script src="../src/pointjs-mvc.js"></script>
 <script src="test.js"></script>
 <script>
     var testCases = {
@@ -30,8 +37,8 @@
 
             fn(3, 4);
         },
-        '$pointjs.single':function(){
-            var getScript = $pointjs.single(function(){
+        '$pointjs.makeSingle':function(){
+            var getScript = $pointjs.makeSingle(function(){
                 return document.createElement("script");
             });
             var script1 = getScript();
@@ -205,6 +212,69 @@
 
             fn1.setNextSuccessor(fn2).setNextSuccessor(fn3);
             fn1.passRequest();
+        },
+        'Function.prototype.after':function(){
+            var fn1 = function(){
+                console.log("fn1");
+                return 1;
+            };
+            var fn2 = function () {
+                console.log(arguments);
+                console.log('fn2');
+                return false;
+            }
+            var fn3 = function(){
+                console.log(arguments);
+                console.log('fn3');
+                return 3;
+            }
+            var fn = fn1.after(fn2).after(fn3);
+            fn("param");
+        },
+        '$pointjs.fn.each':function(){
+            $pointjs.fn.each(
+                {
+                    age:32,
+                    name:'Chen Peng'
+                }, function(prop, value){
+                    console.log('each...', prop, value);
+                });
+        },
+        '$pointjs.fn.$':function(){
+            var figure = $pointjs.$('figure');
+            console.log(figure);
+            console.log(figure.$('figcaption').text());
+            figure.attr('data-id', $pointjs.uid());
+        },
+        '$pointjs.uid':function(){
+            var cache = [];
+            for(var i=0; i<10000; i++){
+                var id = $pointjs.uid();
+                if(cache.indexOf(id)!=-1){
+                    console.log('conflict:'+id);
+                }else{
+                    cache.push(id);
+                }
+            }
+            console.log('generated id count:'+cache.length);
+        },
+        '$pointjs.ajaxSend':function(){
+            $pointjs.ajaxSend({
+                url:'http://45.32.44.156:8080/homework',
+                method:'GET',
+                success:function(){
+                    console.log(arguments);
+                },
+                error:function(){
+                    console.log(arguments);
+                }
+            })
+        },
+        'loadCss':function(){
+            $pointjs.loadCss('https://cdn.jsdelivr.net/npm/bootstrap@3.3.7/dist/css/bootstrap.min.css');
+            $pointjs.sleep(5000).then(function(){
+                $pointjs.unloadCss('https://cdn.jsdelivr.net/npm/bootstrap@3.3.7/dist/css/bootstrap.min.css');
+            });
         }
     };
 
@@ -214,8 +284,10 @@
             console.log('Test Cases:'+cases);
             testCases[cases]();
         }
-
+        console.log($pointjs);
     }());
+
+
 </script>
 </body>
 </html>

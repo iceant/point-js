@@ -1,15 +1,6 @@
 ;(function (window, document) {
 
-    var Type = window.$pointjs.Type = {};
-    for (var i = 0, type; type = ['String', 'Function', 'Array', 'Number', 'Boolean', 'Object'][i++];) {
-        (function (type) {
-            $pointjs.fn['is'+type] = Type['is' + type] = function (obj) {
-                return Object.prototype.toString.call(obj) === '[object ' + type + ']';
-            };
-        }(type));
-    }
-
-    $pointjs.fn.single = function (fn) {
+    $pointjs.fn.makeSingle = function (fn) {
         var ret;
         return function () {
             return ret || (ret = fn.apply(this, arguments));
@@ -78,39 +69,6 @@
         });
     }
 
-    $pointjs.fn.extend = (function () {
-        for (var p in {toString: null}) {
-            //检查当前浏览器是否支持forin循环去遍历出一个不可枚举的属性，比如toString属性，如果不能遍历不可枚举的属性(IE浏览器缺陷)，那么forin循环不会进来
-            return function extend(o) {
-                for (var i = 1, len = arguments.length; i < len; i++) {
-                    var source = arguments[i];
-                    for (prop in source) {
-                        o[prop] = source[prop];
-                    }
-                }
-                return o;
-            };
-        }
-        //这些属性需要特殊检查一下，因为有的IE浏览器不支持for in去遍历这些属性
-        var protoprops = ["toString", "valueOf", "constructor", "hasOwnProperty", "isPropertyOf", "propertyIsEnumerable", "toLocalString"];
-        return function patched_extend(o) {
-            for (var i = 1, len = arguments.length; i < len; i++) {
-                var source = arguments[i];
-                for (prop in source) {//先遍历常规的属性
-                    o[prop] = source[prop];
-                }
-                //检查是否有特殊属性，防止漏掉
-                for (var j = 0, len = protoprops.length; j < len; j++) {
-                    prop = protoprops[j];
-                    if (source.hasOwnProperty(prop)) {
-                        o[prop] = source[prop];
-                    }
-                }
-            }
-            return o;
-        }
-    }());
-
     $pointjs.fn.makeCacheProxy = function (fn) {
         var cache = {};
         return function () {
@@ -139,28 +97,6 @@
         };
     };
 
-    $pointjs.fn.each = function(obj, callback){
-        var value,
-            i = 0,
-            isArray = $pointjs.Type.isArray( obj );
-        if ( isArray ) {    // 迭代类数组
-            for (var len = obj.length; i < len; i++ ) {
-                value = callback.call( obj[i], i, obj[i]);
-                if ( value === false ) {
-                    break;
-                }
-            }
-        } else {
-            for ( i in obj ) {    // 迭代object对象
-                value = callback.call( obj[i], i, obj[i] );
-                if ( value === false ) {
-                    break;
-                }
-            }
-        }
-        return obj;
-    };
-
     $pointjs.fn.reverseEach = function(ary, callback){
         var value;
         for(var l = ary.length-1; l>=0; l--){
@@ -172,6 +108,7 @@
     };
 
     $pointjs.fn.makeMacroCommand = function(){
+        var Type = $pointjs.fn.Type;
         return {
             commandList:[],
             add:function(cmd){
@@ -226,5 +163,7 @@
     $pointjs.fn.makeChain = function(fn){
         return new Chain(fn);
     };
+
+
 
 }(window, document));
