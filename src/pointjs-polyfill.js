@@ -65,8 +65,12 @@
 
     Array.prototype.each=Array.prototype.each||function(iterator){
         if(!iterator) return;
+        var ret = true;
         for(var i=0, l=this.length; i<l;i++){
-            iterator(i, this[i], this);
+            ret = iterator(i, this[i], this);
+            if(ret===false){
+                break;
+            }
         }
     };
 
