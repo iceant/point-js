@@ -91,7 +91,7 @@
 
     Array.prototype.remove = Array.prototype.remove||function(val, cmpFn){
         var idx = _indexOf(val, cmpFn);
-        if(idx!=-1){
+        if(idx!==-1){
             this.slice(idx, 1);
         }
     };

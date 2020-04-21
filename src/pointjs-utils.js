@@ -63,12 +63,6 @@
         };
     };
 
-    $pointjs.fn.sleep = function (millisecond) {
-        return new Promise(function (resolve) {
-            setTimeout(resolve, millisecond);
-        });
-    }
-
     $pointjs.fn.makeCacheProxy = function (fn) {
         var cache = {};
         return function () {

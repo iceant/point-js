@@ -33,6 +33,8 @@
         }(type));
     }
 
+    pointjs.prototype.isObjType=_isObjTypeFn;
+
     pointjs.prototype.uid = uniqueId;
 
     pointjs.prototype.each = function (obj, callback) {
@@ -720,15 +722,6 @@
 
     pointjs.prototype.async = AsyncUtil;
     pointjs.prototype.sleep = AsyncUtil.wait;
-
-    pointjs.prototype.currying = function currying() {
-        var f = arguments[0];
-        var args = Array.prototype.slice.call(arguments, 1);
-        return function () {
-            args.push.apply(args, arguments);
-            return f.apply(this, args);
-        }
-    }
 
     pointjs.prototype.when = function () {
         return Promise.prototype.all.call(this, arguments);
