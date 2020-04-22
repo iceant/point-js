@@ -727,6 +727,28 @@
         return Promise.prototype.all.call(this, arguments);
     }
 
+    var _cmpFn = function(a, b){
+        return a===b;
+    }
+    pointjs.prototype.arrayIndexOf = function(array, val, cmpFn){
+        cmpFn = cmpFn||_cmpFn;
+
+        for(var i=0, l=array.length; i<l; i++){
+            if(cmpFn(array[i], val)){
+                return i;
+            }
+        }
+        return -1;
+    };
+
+    pointjs.prototype.arrayRemove=function(ary, val, cmpFn){
+        cmpFn = cmpFn||_cmpFn;
+        var idx = pointjs.prototype.indexOf(ary, val, cmpFn)
+        if(idx!==-1){
+            ary.slice(idx, 1);
+        }
+    }
+
     window.$pointjs = new pointjs();
 
 }(window, document))
