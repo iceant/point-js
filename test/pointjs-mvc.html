@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html>
+<head></head>
+<body>
+
+<div class="widget"></div>
+
+<script src="../src/pointjs-polyfill.js"></script>
+<script src="../src/pointjs-promise.js"></script>
+<script src="../src/pointjs-base.js"></script>
+<script src="../src/pointjs-event.js"></script>
+<script src="../src/pointjs-utils.js"></script>
+<script src="../src/pointjs-mvc.js"></script>
+<script>
+    var Widget = $V.extend({
+        events:{
+            DISPLAY_DONE:'display.done',
+        },
+        options:{
+            position:{x:0, y:1},
+            notifyOnDisplay:false,
+        },
+        init:function(){
+            console.log('init');
+        },
+        display:function(options){
+            var self = this;
+            options = self.extend(self.options, options);
+            if(options.notifyOnDisplay){
+                self.trigger(self.events.DISPLAY_DONE, options);
+            }
+        }
+    });
+
+    var $widget = new Widget($pointjs.$('.widget'));
+
+    $widget.display({
+        position:{x:1, y:2},
+        notifyOnDisplay: true,
+    });
+
+    $widget.on($widget.events.DISPLAY_DONE, function(param){
+        console.log('trigger display_done event:', param);
+        $pointjs.when(
+            $pointjs.async.ajaxGet('/point-js/test/pointjs-mvc.html'),
+            $pointjs.async.ajaxGet('/point-js/test/pointjs-animate.html')
+        ).then(function(mvc, animate){
+           $widget.$el.html(
+               '<div id="mvc" style="border:1px solid; margin-bottom: 5px;">'+$widget.escapeHtml(mvc.responseText)+'</div>'+
+               '<div id="animate" style="border:1px solid;">'+$widget.escapeHtml(animate.responseText)+'</div>'
+           );
+           $widget.$('#mvc').on('click', function(){
+               alert('mvc clicked!');
+           });
+           $widget.$('#animate').on('click', function(){
+                alert('animate clicked!');
+           });
+        });
+    });
+
+
+</script>
+</body>
+</html>

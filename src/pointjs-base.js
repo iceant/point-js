@@ -25,7 +25,7 @@
     }
 
     var Type = pointjs.prototype.Type = {};
-    for (var i = 0, type; type = ['String', 'Function', 'Array', 'Number', 'Boolean', 'Object'][i++];) {
+    for (var i = 0, type; (type = ['String', 'Function', 'Array', 'Number', 'Boolean', 'Object'][i++]);) {
         (function (type) {
             pointjs.prototype['is' + type] = Type['is' + type] = function (obj) {
                 return _isObjTypeFn(obj, type)
@@ -49,44 +49,43 @@
             }
         } else {
             for (var prop in obj) {
-                value = callback.call(obj[prop], prop, obj[prop]);
-                if (value === false) {
-                    break;
+                if(Object.prototype.hasOwnProperty.call(obj, prop)){
+                    value = callback.call(obj[prop], prop, obj[prop]);
+                    if (value === false) {
+                        break;
+                    }
                 }
             }
         }
         return obj;
     };
 
-    pointjs.prototype.extend = (function () {
-        for (var p in {toString: null}) {
-            return function extend(o) {
-                for (var i = 1, len = arguments.length; i < len; i++) {
-                    var source = arguments[i];
-                    for (prop in source) {
-                        o[prop] = source[prop];
-                    }
-                }
-                return o;
-            };
-        }
-        var protoprops = ["toString", "valueOf", "constructor", "hasOwnProperty", "isPropertyOf", "propertyIsEnumerable", "toLocalString"];
-        return function patched_extend(o) {
-            for (var i = 1, len = arguments.length; i < len; i++) {
+    pointjs.prototype.extend = function(){
+        var length = arguments.length;
+        var target = arguments[0];
+        if(Type.isObject(target)){
+            for (var i = 1; i < length; i++) {
                 var source = arguments[i];
-                for (prop in source) {
-                    o[prop] = source[prop];
-                }
-                for (var j = 0, len = protoprops.length; j < len; j++) {
-                    prop = protoprops[j];
-                    if (source.hasOwnProperty(prop)) {
-                        o[prop] = source[prop];
+                for (var key in source) {
+                    // 使用for in会遍历数组所有的可枚举属性，包括原型。
+                    if (Object.prototype.hasOwnProperty.call(source, key)) {
+                        target[key] = source[key];
                     }
                 }
             }
-            return o;
+        }else if(Type.isFunction(target)){
+            for (var i = 1; i < length; i++) {
+                var source = arguments[i];
+                for (var key in source) {
+                    // 使用for in会遍历数组所有的可枚举属性，包括原型。
+                    if (Object.prototype.hasOwnProperty.call(source, key)) {
+                        target.prototype[key] = source[key];
+                    }
+                }
+            }
         }
-    }());
+        return target;
+    };
 
     var DomElement = function (el) {
         this.$el = el;
@@ -638,10 +637,6 @@
                 data: {},
                 async: true,
                 onreadystatechange: null,
-                success: function () {
-                },
-                error: function () {
-                },
                 always: function () {
                 },
             }, options || {});
@@ -674,6 +669,32 @@
                 xhr.send(options.data);
             });
         },
+        ajaxGet:function(url, headers, always){
+            var options = {url:url, method:'GET'};
+            options.headers=headers||[];
+            options.always=always||function(){};
+            return this.ajaxSend(options);
+        },
+        ajaxPost:function(url, data, headers, always){
+            var options = {url:url, method:'POST'};
+            options.data=data||{};
+            options.headers=headers||[];
+            options.always=always||function(){};
+            return this.ajaxSend(options);
+        },
+        ajaxPut:function(url, data, headers, always){
+            var options = {url:url, method:'PUT'};
+            options.data=data||{};
+            options.headers=headers||[];
+            options.always=always||function(){};
+            return this.ajaxSend(options);
+        },
+        ajaxDelete:function(url, headers, always){
+            var options = {url:url, method:'DELETE'};
+            options.headers=headers||[];
+            options.always=always||function(){};
+            return this.ajaxSend(options);
+        },
         wait: function (duration) {
             return new Promise(function (resolve, reject) {
                 setTimeout(resolve, duration);
@@ -687,8 +708,7 @@
                 }
                 EventUtil.on(el, event, function (event) {
                     resolve(event);
-                    EventUtil.off(element, event, function () {
-                    }, useCapture);
+                    EventUtil.off(element, event, function(){}, useCapture);
                     el = null;
                 }, useCapture);
             });
@@ -704,7 +724,7 @@
                 image.src = src;
             });
         },
-        onDomReady: function () {
+        onDOMContentLoaded: function () {
             return new Promise(function (resolve, reject) {
                 if (document.readyState === 'complete') {
                     resolve();
@@ -724,8 +744,21 @@
     pointjs.prototype.sleep = AsyncUtil.wait;
 
     pointjs.prototype.when = function () {
-        return Promise.prototype.all.call(this, arguments);
-    }
+        var self = this;
+        var args = arguments;
+
+        var when = function(){
+            this.$promise = Promise.all(args);
+        };
+
+        when.prototype.then=function(fn){
+            this.$promise.then(function(){
+                fn.apply(this, arguments[0]);
+            });
+        };
+
+        return new when();
+    };
 
     var _cmpFn = function(a, b){
         return a===b;
