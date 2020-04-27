@@ -4,7 +4,13 @@
     pointjs.prototype.fn = pointjs.prototype;
 
     function _isObjTypeFn(obj, type) {
-        return Object.prototype.toString.call(obj) === '[object ' + type + ']';
+        var ret = Object.prototype.toString.call(obj) === '[object ' + type + ']';
+        if(ret===false){
+            if(obj.__proto__ && obj.__proto__.constructor){
+                ret = obj.__proto__.constructor.name===type;
+            }
+        }
+        return ret;
     }
 
     function $$(selector, context) {
@@ -25,7 +31,7 @@
     }
 
     var Type = pointjs.prototype.Type = {};
-    for (var i = 0, type; (type = ['String', 'Function', 'Array', 'Number', 'Boolean', 'Object'][i++]);) {
+    for (var i = 0, type; (type = ['String', 'Function', 'Array', 'Number', 'Boolean', 'Object', 'Date', 'RegExp'][i++]);) {
         (function (type) {
             pointjs.prototype['is' + type] = Type['is' + type] = function (obj) {
                 return _isObjTypeFn(obj, type)
@@ -108,6 +114,9 @@
     }
 
     pointjs.prototype.$ = _find;
+    pointjs.prototype.isDomElement=function(o){
+        return Object.getPrototypeOf(o)===DomElement.prototype;
+    };
 
     var EventUtil = {
         on: function (element, type, handler, useCapture) {/* 添加事件 */
@@ -424,12 +433,22 @@
         return this.$el.previousSibling;
     }
 
-    DomElement.prototype.style = function (json) {
-        if (!_isNotNull(json)) return;
+    DomElement.prototype.style = function (param) {
+        if (!_isNotNull(param)) return;
         if (this.$el === null) return;
-        for (prop in json) {
-            if (json.hasOwnProperty(prop)) {
-                this.$el.style[prop] = json[prop];
+        if(Type.isObject(param)){
+            for (prop in param) {
+                if (param.hasOwnProperty(prop)) {
+                    this.$el.style[prop] = param[prop];
+                }
+            }
+        }
+        // 获取 param 指定的 style 值
+        if(Type.isString(param)){
+            if(this.$el.currentStyle){
+                return this.$el.currentStyle[param];
+            }else{
+                return getComputedStyle(this.$el, false)[param];
             }
         }
     }
@@ -442,6 +461,25 @@
             return this.$el.title;
         }
     }
+
+    DomElement.prototype.hide = function(){
+        if (this.$el === null) return;
+        this.style({"display":"none"});
+    };
+
+    DomElement.prototype.show = function(){
+        if (this.$el === null) return;
+        this.style({"display":"block"});
+    };
+
+    DomElement.prototype.toggle = function(){
+        if (this.$el === null) return;
+        if('none'===this.style('display')){
+            this.show();
+        }else{
+            this.hide();
+        }
+    };
 
     function makeXHR() {
         if (window.XMLHttpRequest) {
@@ -485,12 +523,27 @@
 
         var xhr = makeXHR();
         xhr.open(options.method, options.url, options.async);
-        for (var i = 0, l = options.headers.length; i < l; i++) {
-            var header = options.headers[i];
-            if (Type.isArray(header) && header.length > 1) {
-                xhr.setRequestHeader(header[0], header[1]);
-            } else if (header.name && header.value) {
-                xhr.setRequestHeader(header.name, header.value);
+        if(Type.isArray(options.headers)){
+            for (var i = 0, l = options.headers.length; i < l; i++) {
+                var header = options.headers[i];
+                if (Type.isArray(header) && header.length > 1) {
+                    xhr.setRequestHeader(header[0], header[1]);
+                } else if (header.name && header.value) {
+                    xhr.setRequestHeader(header.name, header.value);
+                }else if(Type.isObject(header)){
+                    for(name in header){
+                        if(Object.prototype.hasOwnProperty.call(header, name)){
+                            xhr.setRequestHeader(name, header[name]);
+                        }
+                    }
+                }
+            }
+        }else if(Type.isObject(options.headers)){
+            var headers = options.headers;
+            for(name in headers){
+                if(Object.prototype.hasOwnProperty.call(headers, name)){
+                    xhr.setRequestHeader(name, headers[name]);
+                }
             }
         }
         if (options.onreadystatechange !== null) {
@@ -644,12 +697,27 @@
             return new Promise(function (resolve, reject) {
                 var xhr = makeXHR();
                 xhr.open(options.method, options.url, options.async);
-                for (var i = 0, l = options.headers.length; i < l; i++) {
-                    var header = options.headers[i];
-                    if (Type.isArray(header) && header.length > 1) {
-                        xhr.setRequestHeader(header[0], header[1]);
-                    } else if (header.name && header.value) {
-                        xhr.setRequestHeader(header.name, header.value);
+                if(Type.isArray(options.headers)){
+                    for (var i = 0, l = options.headers.length; i < l; i++) {
+                        var header = options.headers[i];
+                        if (Type.isArray(header) && header.length > 1) {
+                            xhr.setRequestHeader(header[0], header[1]);
+                        } else if (header.name && header.value) {
+                            xhr.setRequestHeader(header.name, header.value);
+                        }else if(Type.isObject(header)){
+                            for(name in header){
+                                if(Object.prototype.hasOwnProperty.call(header, name)){
+                                    xhr.setRequestHeader(name, header[name]);
+                                }
+                            }
+                        }
+                    }
+                }else if(Type.isObject(options.headers)){
+                    var headers = options.headers;
+                    for(name in headers){
+                        if(Object.prototype.hasOwnProperty.call(headers, name)){
+                            xhr.setRequestHeader(name, headers[name]);
+                        }
                     }
                 }
                 resolve = resolve || options.success;

@@ -1,9 +1,11 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head></head>
 <body>
 
+<div class="desc"></div>
 <div class="widget"></div>
+
 
 <script src="../src/pointjs-polyfill.js"></script>
 <script src="../src/pointjs-promise.js"></script>
@@ -33,7 +35,7 @@
     });
 
     var $widget = new Widget($pointjs.$('.widget'));
-
+    console.log($widget);
     $widget.display({
         position:{x:1, y:2},
         notifyOnDisplay: true,
@@ -42,7 +44,10 @@
     $widget.on($widget.events.DISPLAY_DONE, function(param){
         console.log('trigger display_done event:', param);
         $pointjs.when(
-            $pointjs.async.ajaxGet('/point-js/test/pointjs-mvc.html'),
+            $pointjs.async.ajaxSend({
+                url:'/point-js/test/pointjs-mvc.html',
+                headers:{"Cache-Control":3600},
+            }),
             $pointjs.async.ajaxGet('/point-js/test/pointjs-animate.html')
         ).then(function(mvc, animate){
            $widget.$el.html(
@@ -58,7 +63,18 @@
         });
     });
 
+    var desc = new Widget('.desc');
+    desc.display();
+    desc.on(desc.events.DISPLAY_DONE, function(param){
+        $widget.$el.hide();
 
+        var json = $pointjs.extend({}, desc, desc.__proto__);
+
+        desc.$el.html('<pre>'+JSON.stringify(json)+'</pre>');
+        desc.$el.on('click', function(){
+            $widget.$el.toggle();
+        });
+    });
 </script>
 </body>
 </html>

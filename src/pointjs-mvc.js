@@ -13,7 +13,13 @@
             var View = function(el){
                 this.vid = makeVid();
                 this.$event = makeEvent(this.vid);
-                this.$el = el||document;
+                if($pointjs.isString(el)){
+                    this.$el = $pointjs.$(el);
+                }else if($pointjs.isObjType(el, 'DomElement')){
+                    this.$el = el;
+                }else{
+                    this.$el = document;
+                }
             };
 
             View.prototype.one = function(key, fn, last){
